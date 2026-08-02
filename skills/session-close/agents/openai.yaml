@@ -1,0 +1,7 @@
+interface:
+  display_name: "Session Close"
+  short_description: "Save handoff and queue contract improvements"
+  default_prompt: "Use $session-close to save a verified handoff and queue retrospective and AGENTS.md improvements for approval."
+
+policy:
+  allow_implicit_invocation: false
