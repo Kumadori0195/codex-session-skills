@@ -111,6 +111,46 @@ The skills are explicit-only and do not invoke implicitly during unrelated work.
 complete bundle makes `session-close` immediately usable; installing it alone requires the two
 companion skills to be available separately.
 
+For a reproducible fresh install or update, pin the bundle to a full commit SHA and set
+`CODEX_SKILL_ROOT` to the configured Codex skill root. Do not use a moving branch such as `main`
+when recording an install. The following PowerShell procedure works for both a fresh checkout and
+an update, and preserves the complete skill directories:
+
+~~~powershell
+$BundleRef = "<full-bundle-commit-sha>"
+$SkillRoot = $env:CODEX_SKILL_ROOT
+if (-not $SkillRoot) { throw "Set CODEX_SKILL_ROOT to the configured Codex skill root." }
+$null = New-Item -ItemType Directory -Force -Path $SkillRoot
+$BundleDir = Join-Path (Get-Location) "codex-session-skills"
+$SkillNames = @("session-close", "session-handoff", "agent-retrospective")
+
+if (-not (Test-Path -LiteralPath $BundleDir)) {
+    git clone https://github.com/Kumadori0195/codex-session-skills.git $BundleDir
+}
+git -C $BundleDir fetch --depth 1 origin $BundleRef
+git -C $BundleDir checkout --detach $BundleRef
+
+foreach ($Name in $SkillNames) {
+    Copy-Item -LiteralPath (Join-Path $BundleDir "skills\$Name") `
+        -Destination (Join-Path $SkillRoot $Name) -Recurse -Force
+}
+~~~
+
+Verify the installed files against the pinned checkout with SHA-256 before using them:
+
+~~~powershell
+$SkillRoot = $env:CODEX_SKILL_ROOT
+if (-not $SkillRoot) { throw "Set CODEX_SKILL_ROOT to the configured Codex skill root." }
+$BundleDir = Join-Path (Get-Location) "codex-session-skills"
+$SkillNames = @("session-close", "session-handoff", "agent-retrospective")
+foreach ($Name in $SkillNames) {
+    $SourceHash = (Get-FileHash -Algorithm SHA256 (Join-Path $BundleDir "skills\$Name\SKILL.md")).Hash
+    $InstalledHash = (Get-FileHash -Algorithm SHA256 (Join-Path $SkillRoot "$Name\SKILL.md")).Hash
+    if ($SourceHash -ne $InstalledHash) { throw "$Name hash mismatch" }
+    "$Name $SourceHash"
+}
+~~~
+
 ## Usage
 
 At the end of a substantive session:
