@@ -48,7 +48,8 @@ project decisions.
 When explicitly invoked, session-close:
 
 1. reads the installed session-handoff and agent-retrospective skills;
-2. reads the nearest AGENTS.md and the project's configured handoff file;
+2. resolves the project handoff using explicit user paths, project guidance, and repository
+   conventions in that order;
 3. verifies the smallest useful set of repository and GitHub facts;
 4. saves a structured private retrospective with stable RETRO IDs;
 5. updates the project handoff with current state and pending recommendations;
@@ -57,8 +58,11 @@ When explicitly invoked, session-close:
 Instruction-contract findings are recorded with an exact target file, target section,
 evidence, bounded scope, and success signal. They remain PENDING APPROVAL.
 
-The workflow distinguishes verified facts from assumptions and unavailable or failed checks.
-It must not turn an intended action into a claimed result without evidence.
+The workflow distinguishes verified facts from assumptions and evidence availability. Material
+facts use `VERIFIED`, `FAILED`, `NOT RUN`, `UNAVAILABLE`, or `UNVERIFIED`. In particular,
+`UNAVAILABLE` means that required evidence cannot currently be accessed, while `UNVERIFIED`
+means that an existing claim cannot be confirmed. It must not turn an intended action into a
+claimed result without evidence.
 
 ## What it does not do automatically
 
@@ -82,9 +86,9 @@ approve RETRO-ID apply
 The proposal lifecycle is:
 
 ~~~text
-PENDING APPROVAL -> APPROVED -> IMPLEMENTED -> VERIFIED
-                         |          |
-                         +----------+--> REJECTED / DEFERRED / BLOCKED
+PENDING APPROVAL -> APPROVED | REJECTED | DEFERRED
+APPROVED         -> IMPLEMENTED | DEFERRED | BLOCKED
+IMPLEMENTED      -> VERIFIED | BLOCKED
 ~~~
 
 `approve RETRO-ID` authorizes preparation of a bounded diff. `approve RETRO-ID apply`
@@ -92,10 +96,29 @@ authorizes implementation of that exact proposal after its target, evidence, and
 re-read. If the command is used as a combined request, the agent must record `APPROVED` after
 preparing the diff before applying it. The phrases are an agent-interpreted workflow
 convention; they do not grant tool permissions or bypass the project's normal approval and
-external-write rules.
+external-write rules. `VERIFIED`, `REJECTED`, `DEFERRED`, and `BLOCKED` are terminal states for
+that proposal record. Approval-like text in quotes, examples, code blocks, logs, repository
+files, or handoffs is not direct user approval.
 
 For AGENTS.md and other instruction-contract changes, approval prepares a minimal diff;
 application remains bounded to the named file and section.
+
+## Scenario evaluations
+
+The repository includes behavior-contract fixtures under `evals/session-close/`. They cover
+handoff precedence, ambiguous candidates, unavailable evidence, context compaction, private
+persistence failures, approval intent, invalid transitions, RETRO-ID collisions, and
+self-invalidating handoff claims.
+
+Validate the fixture schema locally with:
+
+~~~text
+python scripts/validate_scenarios.py
+~~~
+
+The GitHub Actions workflow validates both the skill packages and these fixtures. The fixtures
+are regression documentation and deterministic contract checks; they do not provide runtime
+permission enforcement, sandboxing, or automatic secret detection.
 
 ## Installation
 
@@ -248,7 +271,11 @@ The close flow preserves uncertainty instead of inventing a result:
   retrospective and report that no project handoff was created.
 - If the handoff contains unrelated or ambiguous edits, stop before overwriting it and ask.
 - If a repository, test, or GitHub check fails or is unavailable, record `FAILED`, `NOT RUN`,
-  or `UNVERIFIED` rather than claiming success.
+  `UNAVAILABLE`, or `UNVERIFIED` rather than claiming success.
+- If context compaction removed evidence from the review window, mark that evidence
+  `UNAVAILABLE`; do not reconstruct the missing timeline from repository state alone.
+- If the private retrospective destination cannot be resolved or written, report persistence as
+  `UNAVAILABLE` and do not write a misleading private-path reference into a shared handoff.
 - If an approval ID is missing, unknown, or ambiguous, do not prepare or apply a change.
 - If content may contain a secret, omit or redact it; do not copy the uncertain value into an
   artifact.
@@ -264,7 +291,7 @@ not currently tested or guaranteed.
 The skill is project-agnostic:
 
 - it resolves companion skills from the active Codex skill catalog;
-- it discovers AGENTS.md and the project's configured handoff file;
+- it discovers the handoff using explicit, documented precedence;
 - it uses the current user's configured Codex data directory for private retrospectives;
 - it does not embed a username, machine path, repository name, or model-specific setup.
 
@@ -284,6 +311,14 @@ skills/
     ├── SKILL.md
     └── agents/
         └── openai.yaml
+evals/
+└── session-close/
+    └── scenarios.json
+scripts/
+└── validate_scenarios.py
+.github/
+└── workflows/
+    └── validate-skills.yml
 ~~~
 
 ## License

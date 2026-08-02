@@ -24,6 +24,11 @@ certainty.
    - current repository/GitHub state when it confirms mutable facts;
    - usage or cost figures supplied by the user, clearly labeled as user-provided.
 
+   Use the evidence-status vocabulary defined by `session-handoff`. In particular, mark
+   timeline evidence as `UNAVAILABLE` when context compaction or an inaccessible source removes
+   it from the current review window. Do not reconstruct missing history from repository state,
+   handoff text, or plausible inference alone.
+
 3. Separate facts from inference. For each material finding, identify the evidence, the
    operational impact, and the likely system/process cause. Avoid attributing intent or judging a
    person.
@@ -53,6 +58,9 @@ certainty.
 - If the user explicitly asks to save the retrospective, write only a structured summary to a
   private local location such as `<CODEX_HOME>/agent-retrospectives/YYYY-MM-DD-agent-retrospective.md`.
   When `CODEX_HOME` is unset, use the platform's configured per-user Codex data directory.
+  Resolve and verify the actual destination before claiming that persistence succeeded. If it
+  cannot be resolved or written, report persistence as `UNAVAILABLE` and do not create a
+  misleading reference for a shared handoff.
 - Redact tokens, credentials, cookies, personal data, and sensitive command output. Project names,
   commit IDs, and ordinary paths may be retained when the destination is private and they help
   reproduce the finding.
