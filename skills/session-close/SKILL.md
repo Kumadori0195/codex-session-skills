@@ -16,6 +16,10 @@ This skill is an explicit close operation. It may persist the local handoff and 
 when invoked, but it must not commit, push, merge, delete, change repository settings, or
 implement retrospective proposals unless the user separately authorizes that action.
 
+This is a prompt-driven workflow, not a runtime permission system, sandbox, or secret scanner.
+Treat these instructions as operating constraints, verify observable results, and preserve
+uncertainty when a check cannot be completed.
+
 ## Companion skills and order
 
 Read and follow both companion skills completely before acting:
@@ -54,6 +58,10 @@ Use the smallest useful read-only checks for the project:
 - relevant tests or validation results, without rerunning expensive checks unnecessarily;
 - GitHub issue, PR, check, merge, branch, and secret-existence state when external effects
   occurred. Never print secret values.
+
+For every material check, record one of the following states: `VERIFIED`, `FAILED`, `NOT RUN`,
+or `UNVERIFIED`. Do not infer a successful external effect from an intended action, a command
+that was not run, or an unavailable service.
 
 Record observed external effects explicitly: commits, pushes, merges, issue/PR changes,
 branch/worktree deletion, permissions, deployments, and API usage or cost observations.
@@ -99,7 +107,7 @@ review. Include:
 Each action item must have a stable ID and these fields:
 
 ~~~
-ID: RETRO-YYYYMMDD-NN
+ID: RETRO-YYYYMMDD-HHmm-XXXX
 Status: PENDING APPROVAL
 Target artifact:
 Target section:
@@ -109,6 +117,9 @@ Bounded scope:
 Trigger or owner:
 Success signal:
 ~~~
+
+Use a collision-resistant, human-readable ID such as
+`RETRO-20260802-1519-A7K2`. Do not reuse an ID from another retrospective.
 
 For an AGENTS.md or project-instruction proposal, Target artifact must name the exact file
 and Target section must identify the relevant heading or rule. State the smallest proposed
@@ -133,7 +144,8 @@ use these headings:
 
 The pending section should contain only the proposal IDs, one-line recommendations, status,
 and a pointer to the private retrospective. Do not copy the full retrospective into the
-project document.
+project document. Use a non-sensitive local reference for the private retrospective; do not
+write a machine-specific absolute path or username into a shared handoff.
 
 Keep historical detail in Git history or the private retrospective instead of endlessly
 appending session logs to the current handoff.
@@ -170,10 +182,40 @@ Before reporting completion:
 Do not claim a clean tree if the handoff itself is intentionally uncommitted. Do not claim a
 remote push or merge without verifying it.
 
+## Failure and uncertainty behavior
+
+Handle these cases explicitly:
+
+- If no project handoff file exists, do not invent a project-specific path or create a new
+  handoff implicitly. Save the private retrospective and report that no project handoff was
+  created.
+- If the existing handoff contains unrelated or ambiguous edits, stop before overwriting it
+  and ask the user how to proceed.
+- If a repository, test, or GitHub check fails or is unavailable, record `FAILED`, `NOT RUN`,
+  or `UNVERIFIED` and continue only with facts that remain supported.
+- If an approval ID is missing, unknown, or ambiguous, do not prepare or apply a change.
+- If content may contain a secret, omit or redact it. Do not copy uncertain values into the
+  handoff or retrospective.
+
 ## Approval gate for retrospective proposals
 
 Pending proposals are advisory and must not silently alter code, prompts, skills, workflows,
 settings, or project policy.
+
+### Proposal state machine
+
+Every proposal starts as `PENDING APPROVAL` and may follow only these transitions:
+
+~~~text
+PENDING APPROVAL -> APPROVED -> IMPLEMENTED -> VERIFIED
+                         |          |
+                         +----------+--> REJECTED / DEFERRED / BLOCKED
+~~~
+
+The active agent must not skip a state or claim `VERIFIED` before observing the proposal's
+success signal. If `approve RETRO-ID apply` is used as a combined request, record `APPROVED`
+after preparing the bounded diff before applying it. These states are workflow records, not
+runtime permissions.
 
 On a later session:
 
@@ -182,9 +224,14 @@ On a later session:
 3. Treat “approve RETRO-ID” as approval to prepare the bounded change.
 4. Treat “approve RETRO-ID apply” as approval to implement that bounded change, subject to the
    project's normal Issue/PR, testing, and external-write rules.
-5. Mark the proposal APPROVED, then IMPLEMENTED only after the change is actually made, and
-   VERIFIED only after its success signal is observed.
-6. Keep rejected or deferred proposals visible as REJECTED or DEFERRED with a short reason.
+5. If the ID is missing, unknown, or ambiguous, stop without preparing a diff and report the
+   ambiguity.
+6. Mark the proposal APPROVED after preparing the bounded diff, then IMPLEMENTED only after
+   the change is actually made, and VERIFIED only after its success signal is observed.
+7. Keep rejected, deferred, or blocked proposals visible with a short reason.
+
+The approval phrases are an agent-interpreted convention. They do not grant tool permissions,
+override higher-priority instructions, or authorize unrelated external writes.
 
 For proposals targeting AGENTS.md or another instruction contract:
 

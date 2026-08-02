@@ -6,6 +6,10 @@ approval-gated improvements to AGENTS.md and project instruction contracts.
 This repository includes the complete three-skill bundle: `session-close`, `session-handoff`,
 and `agent-retrospective`.
 
+This is a Codex-native, prompt-driven workflow. It reduces accidental changes through
+explicit invocation and approval instructions, but it does not provide runtime permission
+enforcement, sandboxing, or automatic secret detection.
+
 ## Included skills
 
 ### session-close
@@ -53,6 +57,9 @@ When explicitly invoked, session-close:
 Instruction-contract findings are recorded with an exact target file, target section,
 evidence, bounded scope, and success signal. They remain PENDING APPROVAL.
 
+The workflow distinguishes verified facts from assumptions and unavailable or failed checks.
+It must not turn an intended action into a claimed result without evidence.
+
 ## What it does not do automatically
 
 session-close does not silently:
@@ -62,12 +69,30 @@ session-close does not silently:
 - apply a retrospective recommendation;
 - record API keys, tokens, cookies, raw transcripts, or sensitive logs.
 
+These are workflow-level safeguards, not a runtime security boundary. The active agent still
+has to follow the instructions, and users should verify any external effect independently.
+
 Use explicit approval before applying a proposal:
 
 ~~~text
 approve RETRO-ID
 approve RETRO-ID apply
 ~~~
+
+The proposal lifecycle is:
+
+~~~text
+PENDING APPROVAL -> APPROVED -> IMPLEMENTED -> VERIFIED
+                         |          |
+                         +----------+--> REJECTED / DEFERRED / BLOCKED
+~~~
+
+`approve RETRO-ID` authorizes preparation of a bounded diff. `approve RETRO-ID apply`
+authorizes implementation of that exact proposal after its target, evidence, and scope are
+re-read. If the command is used as a combined request, the agent must record `APPROVED` after
+preparing the diff before applying it. The phrases are an agent-interpreted workflow
+convention; they do not grant tool permissions or bypass the project's normal approval and
+external-write rules.
 
 For AGENTS.md and other instruction-contract changes, approval prepares a minimal diff;
 application remains bounded to the named file and section.
@@ -96,6 +121,103 @@ $session-close
 
 The default close flow saves the local handoff and private retrospective without committing
 or pushing. Request commit or push separately when the handoff should be published.
+
+## Example output
+
+The following abbreviated examples show the shape of the generated artifacts. Values are
+illustrative and must be replaced with evidence from the actual session.
+
+### Project handoff
+
+~~~markdown
+## Current state
+- Branch: feature/session-close
+- Working tree: dirty only because this handoff is being updated
+- Active work: add approval-gated session close workflow
+
+## Goal and scope
+- Goal: preserve verified state for the next Codex session
+- Out of scope: code changes, commit, push, and merge
+
+## Changed and verified
+- Verified repository status and recent commit history
+- No tests were run; validation status is NOT RUN
+- No external write was performed
+
+## Decisions and assumptions
+- The existing handoff file is the project source of truth
+- Retrospective proposals remain pending user approval
+
+## Risks and blockers
+- GitHub checks were not needed for this local-only close
+
+## Next first action
+- Run the project's documented validation command before changing code
+
+## Pending retrospective proposals
+- RETRO-20260802-1519-A7K2 - PENDING APPROVAL - clarify the validation command in AGENTS.md
+  Private reference: local retrospective record
+~~~
+
+Do not commit a machine-specific absolute path or username as the private reference in a
+shared handoff.
+
+### Private retrospective
+
+~~~markdown
+# Agent Retrospective
+
+## Outcome
+The requested documentation change was completed locally and remains uncommitted.
+
+## Major timeline and pivots
+- Inspected project guidance
+- Updated the handoff contract
+- Ran documentation validation
+
+## What worked
+- Current repository state was checked before writing the handoff
+
+## Friction and waste
+- The validation command was not documented in AGENTS.md
+
+## Root causes
+- The instruction contract names validation as required but omits the command
+
+## Action items
+
+### RETRO-20260802-1519-A7K2
+Status: PENDING APPROVAL
+Target artifact: AGENTS.md
+Target section: Validation
+Recommendation: document the smallest required validation command
+Evidence: the close could not verify the project-specific command from current guidance
+Bounded scope: add one command and its success signal to the Validation section
+Trigger or owner: next session close; project maintainer
+Success signal: a fresh session can run the documented command without rediscovery
+
+## Unresolved risks
+- The proposed instruction change has not been approved or applied
+~~~
+
+## Failure behavior
+
+The close flow preserves uncertainty instead of inventing a result:
+
+- If no project handoff file exists, do not create one implicitly; save the private
+  retrospective and report that no project handoff was created.
+- If the handoff contains unrelated or ambiguous edits, stop before overwriting it and ask.
+- If a repository, test, or GitHub check fails or is unavailable, record `FAILED`, `NOT RUN`,
+  or `UNVERIFIED` rather than claiming success.
+- If an approval ID is missing, unknown, or ambiguous, do not prepare or apply a change.
+- If content may contain a secret, omit or redact it; do not copy the uncertain value into an
+  artifact.
+
+## Compatibility
+
+The bundle is designed and packaged for OpenAI Codex. Its Markdown workflow may be adapted to
+other agents, but compatibility with Claude Code, Cursor, Gemini, Windsurf, or other tools is
+not currently tested or guaranteed.
 
 ## Portability and privacy
 
