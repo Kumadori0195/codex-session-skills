@@ -18,13 +18,15 @@ implement retrospective proposals unless the user separately authorizes that act
 
 ## Companion skills and order
 
-Read and follow both installed companion skills completely before acting:
+Read and follow both companion skills completely before acting:
 
 - the skill named session-handoff;
 - the skill named agent-retrospective.
 
-Resolve them from the active Codex skill catalog or configured skill root. Never hardcode a
-username, machine path, or project path to locate companion skills.
+This repository bundles both companion skills. When the three skill directories are installed
+together, they provide the complete close workflow. If session-close is installed by itself,
+the two companion skills must still be available through the active Codex skill catalog or
+configured skill root. Never hardcode a username, machine path, or project path to locate them.
 
 Run the retrospective reasoning first and finalize the handoff second. This lets the handoff
 list the retrospective proposal IDs that remain pending approval.
@@ -177,8 +179,8 @@ On a later session:
 
 1. Read the current handoff and the referenced private retrospective.
 2. Show pending proposal IDs and their bounded scope before starting unrelated work.
-3. Treat “승인 RETRO-ID” or “approve RETRO-ID” as approval to prepare the bounded change.
-4. Treat “승인 RETRO-ID 반영” as approval to implement that bounded change, subject to the
+3. Treat “approve RETRO-ID” as approval to prepare the bounded change.
+4. Treat “approve RETRO-ID apply” as approval to implement that bounded change, subject to the
    project's normal Issue/PR, testing, and external-write rules.
 5. Mark the proposal APPROVED, then IMPLEMENTED only after the change is actually made, and
    VERIFIED only after its success signal is observed.
@@ -201,11 +203,11 @@ secret handling, production actions, commit/push, or merge operations.
 
 Interpret explicit requests as follows:
 
-- $session-close or “세션 종료 저장”: run the full retrospective and local handoff flow;
+- $session-close or “save session close”: run the full retrospective and local handoff flow;
   do not commit or push.
-- “세션 종료 결과를 보고만 해줘”: produce the reports in the response without persisting
+- “report the session close results only”: produce the reports in the response without persisting
   project files.
-- “세션 종료 후 commit/push”: persist, validate, then commit and push only the intended
+- “commit/push after session close”: persist, validate, then commit and push only the intended
   handoff change; do not create a PR unless separately requested.
 
 If no project handoff file exists, save the private retrospective and report that no project

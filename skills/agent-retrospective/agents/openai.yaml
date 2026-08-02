@@ -1,0 +1,6 @@
+interface:
+  display_name: "Agent Retrospective"
+  short_description: "Analyze agent work for cost and process improvements"
+  default_prompt: "Use $agent-retrospective to analyze this session for cost, risk, and workflow improvements."
+policy:
+  allow_implicit_invocation: false

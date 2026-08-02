@@ -3,7 +3,12 @@
 Portable OpenAI Codex skills for verified session handoffs, agent retrospectives, and
 approval-gated improvements to AGENTS.md and project instruction contracts.
 
-## session-close
+This repository includes the complete three-skill bundle: `session-close`, `session-handoff`,
+and `agent-retrospective`.
+
+## Included skills
+
+### session-close
 
 session-close coordinates the end of a substantive coding session so a fresh Codex session
 can understand the project without reconstructing the entire conversation.
@@ -16,6 +21,16 @@ It combines:
   safety, and external side effects;
 - an approval queue for bounded improvements to AGENTS.md, prompts, skills, workflows, and
   other project instruction contracts.
+
+### session-handoff
+
+Creates a compact, evidence-based checkpoint with the verified project state, decisions, risks,
+and one executable next action.
+
+### agent-retrospective
+
+Reviews the agent's process for outcome quality, friction, retries, validation gaps, cost, safety,
+and bounded improvements.
 
 ## Why use it?
 
@@ -59,15 +74,17 @@ application remains bounded to the named file and section.
 
 ## Installation
 
-Install the skills/session-close directory into the configured Codex skill root, preserving:
+Install all three `skills/<skill-name>` directories into the configured Codex skill root,
+preserving each directory's:
 
 ~~~text
 SKILL.md
 agents/openai.yaml
 ~~~
 
-The skill is explicit-only and does not invoke implicitly during unrelated work. It expects
-the companion skills named session-handoff and agent-retrospective to be available.
+The skills are explicit-only and do not invoke implicitly during unrelated work. Installing the
+complete bundle makes `session-close` immediately usable; installing it alone requires the two
+companion skills to be available separately.
 
 ## Usage
 
@@ -93,7 +110,15 @@ The skill is project-agnostic:
 
 ~~~text
 skills/
-└── session-close/
+├── session-close/
+│   ├── SKILL.md
+│   └── agents/
+│       └── openai.yaml
+├── session-handoff/
+│   ├── SKILL.md
+│   └── agents/
+│       └── openai.yaml
+└── agent-retrospective/
     ├── SKILL.md
     └── agents/
         └── openai.yaml
