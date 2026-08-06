@@ -49,11 +49,12 @@ When explicitly invoked, session-close:
 
 1. reads the installed session-handoff and agent-retrospective skills;
 2. resolves the project handoff using explicit user paths, project guidance, and repository
-   conventions in that order;
+   conventions in that order, then uses the documented project-root default;
 3. verifies the smallest useful set of repository and GitHub facts;
 4. saves a structured private retrospective with stable RETRO IDs;
-5. updates the project handoff with current state and pending recommendations;
-6. validates the handoff for stale claims, secrets, and unrelated changes.
+5. creates or updates the project `HANDOVER.md` and companion `REPRO.md` with current state,
+   reproduction steps, and pending recommendations;
+6. validates both project artifacts for stale claims, secrets, and unrelated changes.
 
 Instruction-contract findings are recorded with an exact target file, target section,
 evidence, bounded scope, and success signal. They remain PENDING APPROVAL.
@@ -182,8 +183,9 @@ At the end of a substantive session:
 $session-close
 ~~~
 
-The default close flow saves the local handoff and private retrospective without committing
-or pushing. Request commit or push separately when the handoff should be published.
+The default close flow creates or updates `HANDOVER.md` and `REPRO.md` at the active project root,
+along with the private retrospective, without committing or pushing. Request commit or push
+separately when the project artifacts should be published.
 
 ## Example output
 
@@ -224,6 +226,28 @@ illustrative and must be replaced with evidence from the actual session.
 
 Do not commit a machine-specific absolute path or username as the private reference in a
 shared handoff.
+
+### Reproduction record
+
+~~~markdown
+## Environment and prerequisites
+- Required tools, versions, services, and local assets
+
+## Start and stop
+- Commands or UI actions to enter and leave the required state
+
+## Reproduction steps
+1. The smallest ordered procedure for the current behavior
+
+## Expected outputs
+- Observable files, responses, or other success signals
+
+## Validation commands and results
+- Command: status and evidence
+
+## Known failures and limitations
+- Unavailable evidence, blockers, and unsafe assumptions
+~~~
 
 ### Private retrospective
 
@@ -267,9 +291,10 @@ Success signal: a fresh session can run the documented command without rediscove
 
 The close flow preserves uncertainty instead of inventing a result:
 
-- If no project handoff file exists, do not create one implicitly; save the private
-  retrospective and report that no project handoff was created.
-- If the handoff contains unrelated or ambiguous edits, stop before overwriting it and ask.
+- If no project handoff file exists, create the documented default `HANDOVER.md` and `REPRO.md`
+  pair at the active project root. If the active project root cannot be resolved, report the
+  artifact paths as `UNAVAILABLE` and ask for an explicit path.
+- If either project artifact contains unrelated or ambiguous edits, stop before overwriting it and ask.
 - If a repository, test, or GitHub check fails or is unavailable, record `FAILED`, `NOT RUN`,
   `UNAVAILABLE`, or `UNVERIFIED` rather than claiming success.
 - If context compaction removed evidence from the review window, mark that evidence

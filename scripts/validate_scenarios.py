@@ -116,6 +116,17 @@ def validate(path: Path) -> list[str]:
                 discovery.get("selected_path"), str
             ):
                 errors.append(f"{prefix}.expected.discovery.selected_path must be a string or null")
+            repro_path = discovery.get("selected_repro_path")
+            if discovery.get("status") in {"SELECTED", "DEFAULT_CREATED"}:
+                if not isinstance(repro_path, str) or not repro_path.strip():
+                    errors.append(
+                        f"{prefix}.expected.discovery.selected_repro_path must be a non-empty string "
+                        "when a project handoff is selected or created"
+                    )
+            elif repro_path is not None and not isinstance(repro_path, str):
+                errors.append(
+                    f"{prefix}.expected.discovery.selected_repro_path must be a string or null"
+                )
 
         evidence = expected.get("evidence_statuses")
         if not _string_list(evidence) or not evidence:

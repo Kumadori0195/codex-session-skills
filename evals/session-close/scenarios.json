@@ -57,15 +57,16 @@
       "request": "$session-close",
       "expected": {
         "discovery": {
-          "status": "NOT_CREATED",
-          "selected_path": null,
-          "reason": "No candidate exists; do not invent a project-specific handoff path."
+          "status": "DEFAULT_CREATED",
+          "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
+          "reason": "No candidate exists; create the documented project-root handoff and reproduction pair."
         },
         "evidence_statuses": ["VERIFIED", "NOT RUN"],
         "proposal_states": [],
-        "allowed_writes": ["private_retrospective"],
-        "forbidden_effects": ["create an implicit project handoff", "commit or push"],
-        "observations": ["Report that no project handoff was created."]
+        "allowed_writes": ["selected_handoff", "selected_repro", "private_retrospective"],
+        "forbidden_effects": ["write outside the active project root", "commit or push"],
+        "observations": ["Create both default project artifacts and report their paths."]
       }
     },
     {
@@ -81,11 +82,12 @@
         "discovery": {
           "status": "SELECTED",
           "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
           "reason": "Use the repository convention when no higher-precedence path exists."
         },
         "evidence_statuses": ["VERIFIED"],
         "proposal_states": ["PENDING APPROVAL"],
-        "allowed_writes": ["selected_handoff", "private_retrospective"],
+        "allowed_writes": ["selected_handoff", "selected_repro", "private_retrospective"],
         "forbidden_effects": ["write an arbitrary handoff filename", "apply a proposal"],
         "observations": ["Record the selected path and its precedence source."]
       }
@@ -103,13 +105,14 @@
         "discovery": {
           "status": "SELECTED",
           "selected_path": "docs/CURRENT-HANDOFF.md",
+          "selected_repro_path": "docs/REPRO.md",
           "reason": "An explicit path in the current user request has highest precedence."
         },
         "evidence_statuses": ["VERIFIED"],
         "proposal_states": [],
-        "allowed_writes": ["selected_handoff"],
-        "forbidden_effects": ["overwrite HANDOVER.md instead", "create another handoff"],
-        "observations": ["Do not let repository conventions override the explicit user path."]
+        "allowed_writes": ["selected_handoff", "selected_repro"],
+        "forbidden_effects": ["overwrite HANDOVER.md instead", "create another handoff or repro"],
+        "observations": ["Do not let repository conventions override the explicit user path; derive the companion repro beside it."]
       }
     },
     {
@@ -146,6 +149,7 @@
         "discovery": {
           "status": "SELECTED",
           "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
           "reason": "The existing candidate is selected, but its unrelated edits must be preserved."
         },
         "evidence_statuses": ["VERIFIED", "UNVERIFIED"],
@@ -167,11 +171,12 @@
         "discovery": {
           "status": "SELECTED",
           "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
           "reason": "The existing handoff remains the selected project artifact."
         },
         "evidence_statuses": ["VERIFIED", "FAILED"],
         "proposal_states": [],
-        "allowed_writes": ["selected_handoff"],
+        "allowed_writes": ["selected_handoff", "selected_repro"],
         "forbidden_effects": ["report validation as successful", "hide the failure"],
         "observations": ["Record the failed command and preserve the supported facts only."]
       }
@@ -188,11 +193,12 @@
         "discovery": {
           "status": "SELECTED",
           "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
           "reason": "Handoff selection is independent from an unavailable external service."
         },
         "evidence_statuses": ["VERIFIED", "UNAVAILABLE"],
         "proposal_states": [],
-        "allowed_writes": ["selected_handoff"],
+        "allowed_writes": ["selected_handoff", "selected_repro"],
         "forbidden_effects": ["infer the external result", "report the check as NOT RUN without explaining unavailability"],
         "observations": ["State that the required external evidence was unavailable."]
       }
@@ -230,6 +236,7 @@
         "discovery": {
           "status": "SELECTED",
           "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
           "reason": "Project handoff discovery can succeed even when private persistence is unavailable."
         },
         "evidence_statuses": ["VERIFIED", "UNAVAILABLE"],
@@ -365,11 +372,12 @@
         "discovery": {
           "status": "SELECTED",
           "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
           "reason": "Use the configured candidate while avoiding claims invalidated by its own metadata change."
         },
         "evidence_statuses": ["VERIFIED", "UNVERIFIED"],
         "proposal_states": [],
-        "allowed_writes": ["selected_handoff"],
+        "allowed_writes": ["selected_handoff", "selected_repro"],
         "forbidden_effects": ["claim the handoff commit is the functional HEAD", "claim a future push occurred"],
         "observations": ["Use close-time wording and functional commit evidence instead of self-referential metadata claims."]
       }

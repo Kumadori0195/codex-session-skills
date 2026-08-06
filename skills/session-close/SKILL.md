@@ -8,9 +8,9 @@ description: "Close a substantive Codex session by coordinating an evidence-base
 ## Purpose
 
 Coordinate the installed session-handoff and agent-retrospective skills at the end of a
-substantive session. Save a compact, source-grounded handoff for the next session and a
-private retrospective with 1–3 bounded improvement proposals. Keep every proposal advisory
-until the user explicitly approves it.
+substantive session. Save a compact, source-grounded handoff and companion reproduction record
+for the next session, plus a private retrospective with 1–3 bounded improvement proposals. Keep
+every proposal advisory until the user explicitly approves it.
 
 This skill is an explicit close operation. It may persist the local handoff and retrospective
 when invoked, but it must not commit, push, merge, delete, change repository settings, or
@@ -45,13 +45,17 @@ list the retrospective proposal IDs that remain pending approval.
 
 - Treat the relevant window as the current Codex session since the last explicit handoff,
   unless the user names a narrower segment.
+- Establish the active project root from the current workspace and nearest applicable project
+  guidance before resolving either artifact path; do not silently switch to a nested Git root
+  when the task spans the parent project.
 - Apply the handoff discovery precedence defined by `session-handoff`: explicit user path,
-  explicit project-guidance path, then repository conventions. If candidates tie, stop and
-  report the ambiguity; if none exists, do not create a project handoff implicitly.
-- Treat the existing handoff as a hypothesis until current repository and GitHub state
-  confirm it.
-- Preserve unrelated user changes. If the handoff file already contains unrelated or
-  ambiguous edits, stop and ask before overwriting them.
+  explicit project-guidance path, repository conventions, then the documented default
+  `HANDOVER.md` at the active project root. If candidates tie, stop and report the ambiguity; if
+  the active project root is unavailable, ask for an explicit path.
+- Treat the existing handoff and reproduction record as hypotheses until current repository and
+  GitHub state confirm them.
+- Preserve unrelated user changes. If either artifact already contains unrelated or ambiguous
+  edits, stop and ask before overwriting them.
 
 ### 2. Verify current state
 
@@ -136,11 +140,11 @@ into a policy recommendation.
 
 Do not convert a recommendation into an implemented change while producing the retrospective.
 
-### 4. Finalize the project handoff
+### 4. Finalize the project handoff and reproduction record
 
-Apply session-handoff and update the selected project handoff file only when it exists or the
-user explicitly names a project handoff path. Keep the current section compact and use these
-headings:
+Apply session-handoff and create or update both selected project artifacts. When no handoff
+candidate exists, use the documented default pair `HANDOVER.md` and `REPRO.md` at the active
+project root. Keep the current handoff section compact and use these headings:
 
 - Current state
 - Goal and scope
@@ -157,6 +161,18 @@ write a machine-specific absolute path or username into a shared handoff.
 
 Keep historical detail in Git history or the private retrospective instead of endlessly
 appending session logs to the current handoff.
+
+The companion `REPRO.md` must use these headings:
+
+- Environment and prerequisites
+- Start and stop
+- Reproduction steps
+- Expected outputs
+- Validation commands and results
+- Known failures and limitations
+
+At the start of a later session, read both the current handoff and its companion reproduction
+record before beginning unrelated work.
 
 ### 5. Avoid self-invalidating handoff facts
 
@@ -180,7 +196,7 @@ the metadata commit that stores the handoff.
 Before reporting completion:
 
 - review the handoff diff for stale self-references, secrets, unrelated edits, and incorrect
-  claims;
+  claims, and review the reproduction diff for the same issues;
 - run git diff --check and any proportionate documentation or project validation;
 - verify the final local status. If the user explicitly requested commit/push, verify the
   remote ref afterward; otherwise leave Git state untouched beyond the requested handoff edit;
@@ -194,11 +210,11 @@ remote push or merge without verifying it.
 
 Handle these cases explicitly:
 
-- If no project handoff file exists, do not invent a project-specific path or create a new
-  handoff implicitly. Save the private retrospective and report that no project handoff was
-  created.
-- If the existing handoff contains unrelated or ambiguous edits, stop before overwriting it
-  and ask the user how to proceed.
+- If no project handoff file exists, create the documented default `HANDOVER.md` and `REPRO.md`
+  pair at the active project root. If the active project root cannot be resolved, record the
+  artifact paths as `UNAVAILABLE`, ask for an explicit path, and do not write elsewhere.
+- If either existing artifact contains unrelated or ambiguous edits, stop before overwriting
+  either artifact and ask the user how to proceed.
 - If a repository, test, or GitHub check fails or is unavailable, record `FAILED`, `NOT RUN`,
   `UNAVAILABLE`, or `UNVERIFIED` and continue only with facts that remain supported.
 - If context compaction removed evidence from the review window, mark the missing evidence
@@ -278,10 +294,10 @@ Interpret explicit requests as follows:
 - “report the session close results only”: produce the reports in the response without persisting
   project files.
 - “commit/push after session close”: persist, validate, then commit and push only the intended
-  handoff change; do not create a PR unless separately requested.
+  handoff and reproduction changes; do not create a PR unless separately requested.
 
-If no project handoff file exists, save the private retrospective and report that no project
-handoff was created rather than inventing a project-specific convention.
+If no project handoff file exists, create the documented default `HANDOVER.md` and `REPRO.md`
+pair at the active project root, or report `UNAVAILABLE` if that root cannot be resolved.
 
 ## Safety boundaries
 
