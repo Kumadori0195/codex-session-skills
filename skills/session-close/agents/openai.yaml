@@ -1,7 +1,7 @@
 interface:
   display_name: "Session Close"
-  short_description: "Save handoff and reproduction record"
-  default_prompt: "Use $session-close to save a verified HANDOVER.md and REPRO.md, then queue retrospective and AGENTS.md improvements for approval."
+  short_description: "Save an adaptive, verified session handoff"
+  default_prompt: "Use $session-close to save a verified handoff and only the close artifacts supported by current-session evidence."
 
 policy:
   allow_implicit_invocation: false

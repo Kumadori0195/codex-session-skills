@@ -1,6 +1,7 @@
 interface:
   display_name: "Session Handoff"
-  short_description: "Capture verified state and reproduction steps"
-  default_prompt: "Use $session-handoff to capture the verified state, next action, and reproduction steps for this session."
+  short_description: "Capture verified state and changed reproduction steps"
+  default_prompt: "Use $session-handoff to capture verified project state and update reproduction guidance only when it changed."
+
 policy:
   allow_implicit_invocation: false

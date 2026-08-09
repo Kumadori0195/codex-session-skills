@@ -35,6 +35,13 @@
     "dirty-unrelated-handoff",
     "failed-validation",
     "unavailable-external-check",
+    "unchanged-repro-omitted",
+    "changed-repro-updated",
+    "no-actionable-retrospective",
+    "actionable-retrospective",
+    "reusable-validation-result",
+    "local-only-skips-external",
+    "no-instruction-friction-skips-audit",
     "compacted-history-unavailable",
     "private-retrospective-path-unavailable",
     "unknown-retro-id",
@@ -60,13 +67,13 @@
           "status": "DEFAULT_CREATED",
           "selected_path": "HANDOVER.md",
           "selected_repro_path": "REPRO.md",
-          "reason": "No candidate exists; create the documented project-root handoff and reproduction pair."
+          "reason": "No handoff candidate exists; create the documented project-root handoff and resolve the reproduction candidate without creating it absent a trigger."
         },
         "evidence_statuses": ["VERIFIED", "NOT RUN"],
         "proposal_states": [],
-        "allowed_writes": ["selected_handoff", "selected_repro", "private_retrospective"],
-        "forbidden_effects": ["write outside the active project root", "commit or push"],
-        "observations": ["Create both default project artifacts and report their paths."]
+        "allowed_writes": ["selected_handoff"],
+        "forbidden_effects": ["create an untriggered reproduction record", "create an untriggered private retrospective", "write outside the active project root", "commit or push"],
+        "observations": ["Create the default handoff and report that reproduction and retrospective artifacts were omitted because no trigger was present."]
       }
     },
     {
@@ -86,10 +93,10 @@
           "reason": "Use the repository convention when no higher-precedence path exists."
         },
         "evidence_statuses": ["VERIFIED"],
-        "proposal_states": ["PENDING APPROVAL"],
-        "allowed_writes": ["selected_handoff", "selected_repro", "private_retrospective"],
-        "forbidden_effects": ["write an arbitrary handoff filename", "apply a proposal"],
-        "observations": ["Record the selected path and its precedence source."]
+        "proposal_states": [],
+        "allowed_writes": ["selected_handoff"],
+        "forbidden_effects": ["write an arbitrary handoff filename", "create untriggered artifacts", "apply a proposal"],
+        "observations": ["Record the selected handoff and resolved reproduction candidate without treating path resolution as a write trigger."]
       }
     },
     {
@@ -110,9 +117,9 @@
         },
         "evidence_statuses": ["VERIFIED"],
         "proposal_states": [],
-        "allowed_writes": ["selected_handoff", "selected_repro"],
-        "forbidden_effects": ["overwrite HANDOVER.md instead", "create another handoff or repro"],
-        "observations": ["Do not let repository conventions override the explicit user path; derive the companion repro beside it."]
+        "allowed_writes": ["selected_handoff"],
+        "forbidden_effects": ["overwrite HANDOVER.md instead", "create another handoff", "write an untriggered reproduction record"],
+        "observations": ["Do not let repository conventions override the explicit user path; derive the reproduction candidate beside it without writing it absent a trigger."]
       }
     },
     {
@@ -132,7 +139,7 @@
         },
         "evidence_statuses": ["VERIFIED"],
         "proposal_states": [],
-        "allowed_writes": ["private_retrospective"],
+        "allowed_writes": ["none"],
         "forbidden_effects": ["choose by modification time", "overwrite either candidate"],
         "observations": ["Stop and ask which handoff path should be used."]
       }
@@ -198,9 +205,169 @@
         },
         "evidence_statuses": ["VERIFIED", "UNAVAILABLE"],
         "proposal_states": [],
-        "allowed_writes": ["selected_handoff", "selected_repro"],
+        "allowed_writes": ["selected_handoff"],
         "forbidden_effects": ["infer the external result", "report the check as NOT RUN without explaining unavailability"],
         "observations": ["State that the required external evidence was unavailable."]
+      }
+    },
+    {
+      "id": "unchanged-repro-omitted",
+      "category": "adaptive-artifacts",
+      "setup": {
+        "selected_handoff": "HANDOVER.md",
+        "selected_repro": "REPRO.md",
+        "reproduction_state": "existing reproduction guidance remains current",
+        "trigger_changes": []
+      },
+      "request": "$session-close",
+      "expected": {
+        "discovery": {
+          "status": "SELECTED",
+          "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
+          "reason": "The reproduction candidate is resolved but has no update trigger."
+        },
+        "evidence_statuses": ["VERIFIED"],
+        "proposal_states": [],
+        "allowed_writes": ["selected_handoff"],
+        "forbidden_effects": ["rewrite selected_repro", "rerun product tests solely for close documentation"],
+        "observations": ["Leave REPRO.md unchanged and report that its current content remains valid."]
+      }
+    },
+    {
+      "id": "changed-repro-updated",
+      "category": "adaptive-artifacts",
+      "setup": {
+        "selected_handoff": "HANDOVER.md",
+        "selected_repro": "REPRO.md",
+        "trigger_changes": ["start command changed", "validation command changed"]
+      },
+      "request": "$session-close",
+      "expected": {
+        "discovery": {
+          "status": "SELECTED",
+          "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
+          "reason": "Material continuation commands changed, so the resolved reproduction record must be updated."
+        },
+        "evidence_statuses": ["VERIFIED"],
+        "proposal_states": [],
+        "allowed_writes": ["selected_handoff", "selected_repro"],
+        "forbidden_effects": ["rewrite unrelated reproduction sections", "create a retrospective without a finding"],
+        "observations": ["Update only the affected start and validation guidance."]
+      }
+    },
+    {
+      "id": "no-actionable-retrospective",
+      "category": "adaptive-retrospective",
+      "setup": {
+        "selected_handoff": "HANDOVER.md",
+        "session_outcome": "completed without retries, gaps, drift, or unresolved risk"
+      },
+      "request": "$session-close",
+      "expected": {
+        "discovery": {
+          "status": "SELECTED",
+          "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
+          "reason": "The handoff is selected and no retrospective trigger is established."
+        },
+        "evidence_statuses": ["VERIFIED"],
+        "proposal_states": [],
+        "allowed_writes": ["selected_handoff"],
+        "forbidden_effects": ["create private_retrospective", "generate a generic RETRO proposal"],
+        "observations": ["Write None under pending proposals and omit the private retrospective."]
+      }
+    },
+    {
+      "id": "actionable-retrospective",
+      "category": "adaptive-retrospective",
+      "setup": {
+        "selected_handoff": "HANDOVER.md",
+        "session_findings": ["the same validation command was rediscovered three times", "project guidance omits the command"]
+      },
+      "request": "$session-close",
+      "expected": {
+        "discovery": {
+          "status": "SELECTED",
+          "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
+          "reason": "Observed duplicate work and concrete instruction debt trigger a private retrospective."
+        },
+        "evidence_statuses": ["VERIFIED"],
+        "proposal_states": ["PENDING APPROVAL"],
+        "allowed_writes": ["selected_handoff", "private_retrospective"],
+        "forbidden_effects": ["apply the proposal", "modify AGENTS.md"],
+        "observations": ["Save the evidence-backed proposal privately and list only its ID and summary in the handoff."]
+      }
+    },
+    {
+      "id": "reusable-validation-result",
+      "category": "adaptive-validation",
+      "setup": {
+        "selected_handoff": "HANDOVER.md",
+        "validation_result": "successful command and exit status remain visible",
+        "changes_after_validation": ["HANDOVER.md"]
+      },
+      "request": "$session-close",
+      "expected": {
+        "discovery": {
+          "status": "SELECTED",
+          "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
+          "reason": "Only close documentation changed after the applicable successful validation."
+        },
+        "evidence_statuses": ["VERIFIED"],
+        "proposal_states": [],
+        "allowed_writes": ["selected_handoff"],
+        "forbidden_effects": ["rerun the product validation", "downgrade the visible result to UNVERIFIED"],
+        "observations": ["Reuse the successful result and run only close-artifact validation."]
+      }
+    },
+    {
+      "id": "local-only-skips-external",
+      "category": "adaptive-external-checks",
+      "setup": {
+        "selected_handoff": "HANDOVER.md",
+        "external_effects": [],
+        "work_scope": "local-only"
+      },
+      "request": "$session-close",
+      "expected": {
+        "discovery": {
+          "status": "SELECTED",
+          "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
+          "reason": "No current-session external effect requires verification."
+        },
+        "evidence_statuses": ["VERIFIED", "NOT RUN"],
+        "proposal_states": [],
+        "allowed_writes": ["selected_handoff"],
+        "forbidden_effects": ["query GitHub", "fetch remote refs", "inspect unrelated deployments"],
+        "observations": ["Record external checks as not needed without performing a broad remote audit."]
+      }
+    },
+    {
+      "id": "no-instruction-friction-skips-audit",
+      "category": "adaptive-instruction-checks",
+      "setup": {
+        "selected_handoff": "HANDOVER.md",
+        "instruction_friction": [],
+        "guidance_changes": []
+      },
+      "request": "$session-close",
+      "expected": {
+        "discovery": {
+          "status": "SELECTED",
+          "selected_path": "HANDOVER.md",
+          "selected_repro_path": "REPRO.md",
+          "reason": "No observed instruction friction or changed guidance triggers an audit."
+        },
+        "evidence_statuses": ["VERIFIED", "NOT RUN"],
+        "proposal_states": [],
+        "allowed_writes": ["selected_handoff"],
+        "forbidden_effects": ["perform a broad AGENTS.md audit", "generate speculative instruction debt"],
+        "observations": ["Use the active guidance already needed for the task and omit a separate policy audit."]
       }
     },
     {
@@ -229,6 +396,7 @@
       "category": "persistence-safety",
       "setup": {
         "selected_handoff": "HANDOVER.md",
+        "session_findings": ["an actionable validation gap requires a private retrospective"],
         "private_report_path": "cannot be resolved or written"
       },
       "request": "$session-close",
@@ -241,7 +409,7 @@
         },
         "evidence_statuses": ["VERIFIED", "UNAVAILABLE"],
         "proposal_states": [],
-        "allowed_writes": ["none"],
+        "allowed_writes": ["selected_handoff"],
         "forbidden_effects": ["claim private persistence succeeded", "write a misleading private-path reference"],
         "observations": ["Report private retrospective persistence as UNAVAILABLE."]
       }
@@ -377,7 +545,7 @@
         },
         "evidence_statuses": ["VERIFIED", "UNVERIFIED"],
         "proposal_states": [],
-        "allowed_writes": ["selected_handoff", "selected_repro"],
+        "allowed_writes": ["selected_handoff"],
         "forbidden_effects": ["claim the handoff commit is the functional HEAD", "claim a future push occurred"],
         "observations": ["Use close-time wording and functional commit evidence instead of self-referential metadata claims."]
       }

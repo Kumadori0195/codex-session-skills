@@ -17,12 +17,13 @@ enforcement, sandboxing, or automatic secret detection.
 session-close coordinates the end of a substantive coding session so a fresh Codex session
 can understand the project without reconstructing the entire conversation.
 
-It combines:
+It combines in one adaptive flow:
 
 - a verified session handoff with current repository, GitHub, validation, risk, and next-step
   evidence;
-- an advisory agent retrospective covering outcome quality, process friction, retries, cost,
-  safety, and external side effects;
+- a conditional advisory retrospective when the session contains actionable process evidence;
+- conditional reproduction, external-state, validation, and instruction checks triggered by
+  current-session evidence instead of user-selected modes;
 - an approval queue for bounded improvements to AGENTS.md, prompts, skills, workflows, and
   other project instruction contracts.
 
@@ -47,14 +48,15 @@ project decisions.
 
 When explicitly invoked, session-close:
 
-1. reads the installed session-handoff and agent-retrospective skills;
-2. resolves the project handoff using explicit user paths, project guidance, and repository
+1. resolves the project handoff using explicit user paths, project guidance, and repository
    conventions in that order, then uses the documented project-root default;
-3. verifies the smallest useful set of repository and GitHub facts;
-4. saves a structured private retrospective with stable RETRO IDs;
-5. creates or updates the project `HANDOVER.md` and companion `REPRO.md` with current state,
-   reproduction steps, and pending recommendations;
-6. validates both project artifacts for stale claims, secrets, and unrelated changes.
+2. verifies branch, working-tree, commit, changed-file, and reusable validation evidence once;
+3. runs GitHub, worktree, validation, or instruction checks only when a visible trigger requires
+   them;
+4. always creates or updates `HANDOVER.md`, while updating `REPRO.md` only when continuation or
+   reproduction details materially changed;
+5. saves a private retrospective and stable RETRO IDs only when actionable evidence exists;
+6. validates only the close artifacts that changed.
 
 Instruction-contract findings are recorded with an exact target file, target section,
 evidence, bounded scope, and success signal. They remain PENDING APPROVAL.
@@ -107,9 +109,9 @@ application remains bounded to the named file and section.
 ## Scenario evaluations
 
 The repository includes behavior-contract fixtures under `evals/session-close/`. They cover
-handoff precedence, ambiguous candidates, unavailable evidence, context compaction, private
-persistence failures, approval intent, invalid transitions, RETRO-ID collisions, and
-self-invalidating handoff claims.
+handoff precedence, adaptive omission and positive triggers, reusable validation, local-only
+external checks, unavailable evidence, context compaction, private persistence failures,
+approval intent, invalid transitions, RETRO-ID collisions, and self-invalidating handoff claims.
 
 Validate the fixture schema locally with:
 
@@ -124,16 +126,17 @@ permission enforcement, sandboxing, or automatic secret detection.
 ## Installation
 
 Install all three `skills/<skill-name>` directories into the configured Codex skill root,
-preserving each directory's:
+preserving each complete directory, including:
 
 ~~~text
 SKILL.md
 agents/openai.yaml
+references/ (when present)
 ~~~
 
-The skills are explicit-only and do not invoke implicitly during unrelated work. Installing the
-complete bundle makes `session-close` immediately usable; installing it alone requires the two
-companion skills to be available separately.
+The skills are explicit-only and do not invoke implicitly during unrelated work. `session-close`
+is self-contained for the ordinary close path; the bundled companion skills expose handoff and
+retrospective capabilities for independent use.
 
 For a reproducible fresh install or update, pin the bundle to a full commit SHA and set
 `CODEX_SKILL_ROOT` to the configured Codex skill root. Do not use a moving branch such as `main`
@@ -183,14 +186,14 @@ At the end of a substantive session:
 $session-close
 ~~~
 
-The default close flow creates or updates `HANDOVER.md` and `REPRO.md` at the active project root,
-along with the private retrospective, without committing or pushing. Request commit or push
-separately when the project artifacts should be published.
+The close flow always creates or updates `HANDOVER.md`. It updates `REPRO.md` and saves a private
+retrospective only when current-session evidence triggers them. It does not commit or push unless
+that action is requested separately.
 
 ## Example output
 
-The following abbreviated examples show the shape of the generated artifacts. Values are
-illustrative and must be replaced with evidence from the actual session.
+The following independent, abbreviated examples show the shape of triggered and untriggered
+artifacts. Values are illustrative and must be replaced with evidence from the actual session.
 
 ### Project handoff
 
@@ -220,14 +223,16 @@ illustrative and must be replaced with evidence from the actual session.
 - Run the project's documented validation command before changing code
 
 ## Pending retrospective proposals
-- RETRO-20260802-1519-A7K2 - PENDING APPROVAL - clarify the validation command in AGENTS.md
-  Private reference: local retrospective record
+- None
 ~~~
 
 Do not commit a machine-specific absolute path or username as the private reference in a
 shared handoff.
 
-### Reproduction record
+### Triggered reproduction record
+
+This artifact is created or updated only when environment, execution, reproduction, validation,
+or limitation details materially changed.
 
 ~~~markdown
 ## Environment and prerequisites
@@ -249,7 +254,10 @@ shared handoff.
 - Unavailable evidence, blockers, and unsafe assumptions
 ~~~
 
-### Private retrospective
+### Triggered private retrospective
+
+This artifact is saved only when the session provides evidence for an actionable finding. It may
+contain zero to three action items; generic proposals are not created to satisfy a quota.
 
 ~~~markdown
 # Agent Retrospective
@@ -291,10 +299,11 @@ Success signal: a fresh session can run the documented command without rediscove
 
 The close flow preserves uncertainty instead of inventing a result:
 
-- If no project handoff file exists, create the documented default `HANDOVER.md` and `REPRO.md`
-  pair at the active project root. If the active project root cannot be resolved, report the
-  artifact paths as `UNAVAILABLE` and ask for an explicit path.
-- If either project artifact contains unrelated or ambiguous edits, stop before overwriting it and ask.
+- If no project handoff exists, create `HANDOVER.md` at the active project root. Create
+  `REPRO.md` only when its trigger is present. If the root cannot be resolved, report persistence
+  as `UNAVAILABLE` and ask for an explicit path.
+- If an artifact that would be changed contains unrelated or ambiguous edits, stop before
+  overwriting it and ask.
 - If a repository, test, or GitHub check fails or is unavailable, record `FAILED`, `NOT RUN`,
   `UNAVAILABLE`, or `UNVERIFIED` rather than claiming success.
 - If context compaction removed evidence from the review window, mark that evidence
@@ -315,7 +324,7 @@ not currently tested or guaranteed.
 
 The skill is project-agnostic:
 
-- it resolves companion skills from the active Codex skill catalog;
+- `session-close` is self-contained while its companions remain independently reusable;
 - it discovers the handoff using explicit, documented precedence;
 - it uses the current user's configured Codex data directory for private retrospectives;
 - it does not embed a username, machine path, repository name, or model-specific setup.
@@ -326,8 +335,10 @@ The skill is project-agnostic:
 skills/
 ├── session-close/
 │   ├── SKILL.md
-│   └── agents/
-│       └── openai.yaml
+│   ├── agents/
+│   │   └── openai.yaml
+│   └── references/
+│       └── approval-lifecycle.md
 ├── session-handoff/
 │   ├── SKILL.md
 │   └── agents/

@@ -48,7 +48,7 @@ certainty.
    - **What worked** — practices worth preserving;
    - **Friction and waste** — observable issues and impact;
    - **Root causes** — process or system causes, not personal blame;
-   - **Action items** — 1–3 bounded changes with owner/trigger and success signal;
+   - **Action items** — zero to three bounded changes with owner/trigger and success signal;
    - **Unresolved risks** — items needing a future decision.
 
 ## Persistence and safety
@@ -69,6 +69,7 @@ certainty.
 
 ## Quality bar
 
-A good retrospective produces fewer, better operating changes. Prefer a small number of
-evidence-backed actions over a long list of generic advice, and state uncertainty whenever the
-session does not establish a fact.
+A good retrospective produces fewer, better operating changes. Do not invent an action item when
+the evidence supports none; record that no actionable improvement was found. Prefer a small number
+of evidence-backed actions over generic advice, and state uncertainty whenever the session does
+not establish a fact.
